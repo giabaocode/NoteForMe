@@ -31,7 +31,7 @@ window.ThemeManager = {
     
     // Update meta theme-color
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.content = this.theme === 'dark' ? '#06060F' : '#F8F9FD';
+    if (meta) meta.content = this.theme === 'dark' ? '#0B0B10' : '#F5F5F7';
   },
   
   async toggle() {

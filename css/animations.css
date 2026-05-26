@@ -1,5 +1,6 @@
 /* ============================================================
-   Animations & Transitions
+   ANIMATIONS — Lesson Note
+   Apple-natural easing · spring motion
    ============================================================ */
 
 /* ----------------------------------------------------------
@@ -17,44 +18,43 @@
 }
 
 @keyframes slideInRight {
-  from { opacity: 0; transform: translateX(20px); }
+  from { opacity: 0; transform: translateX(16px); }
   to   { opacity: 1; transform: translateX(0); }
 }
 
 @keyframes slideInLeft {
-  from { opacity: 0; transform: translateX(-20px); }
+  from { opacity: 0; transform: translateX(-16px); }
   to   { opacity: 1; transform: translateX(0); }
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.95); }
+  from { opacity: 0; transform: scale(0.96); }
   to   { opacity: 1; transform: scale(1); }
 }
 
 @keyframes toast-in {
-  0%   { opacity: 0; transform: translateX(100%) scale(0.85); }
-  100% { opacity: 1; transform: translateX(0) scale(1); }
+  0%   { opacity: 0; transform: translateX(80%) scale(0.9); }
+  100% { opacity: 1; transform: translateX(0)   scale(1);   }
 }
 
 @keyframes toast-out {
-  0%   { opacity: 1; transform: translateX(0) scale(1); }
-  100% { opacity: 0; transform: translateX(100%) scale(0.85); }
+  0%   { opacity: 1; transform: translateX(0)   scale(1);   }
+  100% { opacity: 0; transform: translateX(80%) scale(0.9); }
 }
 
 @keyframes modalIn {
-  0%   { opacity: 0; transform: scale(0.9); }
-  60%  { opacity: 1; transform: scale(1.02); }
-  100% { opacity: 1; transform: scale(1); }
+  0%   { opacity: 0; transform: scale(0.94) translateY(12px); }
+  100% { opacity: 1; transform: scale(1)    translateY(0);    }
 }
 
 @keyframes pulse {
   0%, 100% { transform: scale(1);    opacity: 1;    }
-  50%      { transform: scale(1.05); opacity: 0.75; }
+  50%      { transform: scale(1.06); opacity: 0.7;  }
 }
 
 @keyframes shimmer {
@@ -63,9 +63,8 @@
 }
 
 @keyframes bounceIn {
-  0%   { opacity: 0; transform: scale(0.85); }
-  50%  { opacity: 1; transform: scale(1.05); }
-  70%  { transform: scale(0.97); }
+  0%   { opacity: 0; transform: scale(0.86); }
+  60%  { opacity: 1; transform: scale(1.04); }
   100% { opacity: 1; transform: scale(1); }
 }
 
@@ -76,59 +75,59 @@
 
 @keyframes accentGlow {
   0%, 100% { box-shadow: 0 0 0 0 var(--accent-glow); }
-  50%      { box-shadow: 0 0 18px 6px var(--accent-glow); }
+  50%      { box-shadow: 0 0 20px 6px var(--accent-glow); }
 }
 
-/* NEW — Gentle floating motion for icons */
+/* Soft floating motion — Apple-style hover */
 @keyframes float {
   0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-6px); }
+  50%      { transform: translateY(-5px); }
 }
 
-/* NEW — Animated gradient shift for backgrounds/text */
+/* Slow gradient drift */
 @keyframes gradientShift {
   0%   { background-position: 0% 50%; }
   50%  { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
 
-/* NEW — Subtle breathing for soft glows */
+/* Soft breathing for ambient glow */
 @keyframes breathe {
   0%, 100% { opacity: 0.7; transform: scale(1); }
-  50%      { opacity: 1;   transform: scale(1.03); }
+  50%      { opacity: 1;   transform: scale(1.025); }
 }
 
-/* NEW — Slide up with stagger for note cards */
+/* Card entry */
 @keyframes cardEnter {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ----------------------------------------------------------
    Utility Classes
    ---------------------------------------------------------- */
-.animate-fade-in    { animation: fadeIn 0.3s ease-out both; }
-.animate-slide-up   { animation: slideUp 0.35s ease-out both; }
-.animate-scale-in   { animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both; }
-.animate-slide-right{ animation: slideInRight 0.35s ease-out both; }
-.animate-slide-left { animation: slideInLeft 0.35s ease-out both; }
-.animate-bounce-in  { animation: bounceIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
-.animate-modal-in   { animation: modalIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
-.animate-toast-in   { animation: toast-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
-.animate-toast-out  { animation: toast-out 0.3s ease-in both; }
+.animate-fade-in    { animation: fadeIn 0.35s var(--ease-out-quint) both; }
+.animate-slide-up   { animation: slideUp 0.4s  var(--ease-out-quint) both; }
+.animate-scale-in   { animation: scaleIn 0.35s var(--ease-out-quint) both; }
+.animate-slide-right{ animation: slideInRight 0.4s var(--ease-out-quint) both; }
+.animate-slide-left { animation: slideInLeft  0.4s var(--ease-out-quint) both; }
+.animate-bounce-in  { animation: bounceIn 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.animate-modal-in   { animation: modalIn  0.45s var(--ease-out-quint) both; }
+.animate-toast-in   { animation: toast-in 0.5s  var(--ease-out-quint) both; }
+.animate-toast-out  { animation: toast-out 0.32s var(--ease-in-out-quint) both; }
 .animate-fade-out   { animation: fadeOut 0.25s ease-in both; }
-.animate-pulse      { animation: pulse 1.8s ease-in-out infinite; }
-.animate-spin       { animation: spin 0.8s linear infinite; }
-.animate-glow       { animation: accentGlow 2s ease-in-out infinite; }
-.animate-float      { animation: float 4s ease-in-out infinite; }
-.animate-breathe    { animation: breathe 3s ease-in-out infinite; }
+.animate-pulse      { animation: pulse 2s var(--ease-in-out-quint) infinite; }
+.animate-spin       { animation: spin 0.85s linear infinite; }
+.animate-glow       { animation: accentGlow 2.4s var(--ease-in-out-quint) infinite; }
+.animate-float      { animation: float 5s var(--ease-in-out-quint) infinite; }
+.animate-breathe    { animation: breathe 3.5s var(--ease-in-out-quint) infinite; }
 
-/* Auto-entry for note cards in the list */
+/* Auto-entry for note cards */
 #note-list .note-card {
-  animation: cardEnter 0.35s ease-out both;
+  animation: cardEnter 0.4s var(--ease-out-quint) both;
 }
 
-/* Shimmer placeholder block */
+/* Shimmer placeholder */
 .shimmer {
   background: linear-gradient(
     90deg,
@@ -144,18 +143,18 @@
    Staggered Children Delays
    ---------------------------------------------------------- */
 .stagger-children > *:nth-child(1)  { animation-delay: 0ms;   }
-.stagger-children > *:nth-child(2)  { animation-delay: 50ms;  }
-.stagger-children > *:nth-child(3)  { animation-delay: 100ms; }
-.stagger-children > *:nth-child(4)  { animation-delay: 150ms; }
-.stagger-children > *:nth-child(5)  { animation-delay: 200ms; }
-.stagger-children > *:nth-child(6)  { animation-delay: 250ms; }
-.stagger-children > *:nth-child(7)  { animation-delay: 300ms; }
-.stagger-children > *:nth-child(8)  { animation-delay: 350ms; }
-.stagger-children > *:nth-child(9)  { animation-delay: 400ms; }
-.stagger-children > *:nth-child(10) { animation-delay: 450ms; }
+.stagger-children > *:nth-child(2)  { animation-delay: 40ms;  }
+.stagger-children > *:nth-child(3)  { animation-delay: 80ms;  }
+.stagger-children > *:nth-child(4)  { animation-delay: 120ms; }
+.stagger-children > *:nth-child(5)  { animation-delay: 160ms; }
+.stagger-children > *:nth-child(6)  { animation-delay: 200ms; }
+.stagger-children > *:nth-child(7)  { animation-delay: 240ms; }
+.stagger-children > *:nth-child(8)  { animation-delay: 280ms; }
+.stagger-children > *:nth-child(9)  { animation-delay: 320ms; }
+.stagger-children > *:nth-child(10) { animation-delay: 360ms; }
 
 /* ----------------------------------------------------------
-   Smooth Transitions for Interactive Elements
+   Smooth transitions for interactive elements
    ---------------------------------------------------------- */
 a, button, input, select, textarea {
   transition:
