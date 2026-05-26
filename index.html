@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0D0D1A">
+  <meta name="description" content="Lesson Note — Ứng dụng ghi chú bài học thông minh, đẹp mắt với trình soạn thảo rich text, quản lý môn học, và xuất file.">
+  <title>Lesson Note — Ghi chú bài học</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/editor.css">
+
+  <style>
+    /* ─── Auth Overlay ──────────────────────────────────── */
+    #auth-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(124, 58, 237, 0.45) 0%, transparent 50%),
+        radial-gradient(circle at 80% 30%, rgba(236, 72, 153, 0.35) 0%, transparent 50%),
+        radial-gradient(circle at 50% 80%, rgba(59, 130, 246, 0.40) 0%, transparent 50%),
+        linear-gradient(135deg, #0A0A1F 0%, #14142E 50%, #0F2340 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+      padding: 24px;
+      overflow: hidden;
+    }
+    #auth-overlay::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.3'/></svg>");
+      opacity: 0.3;
+      mix-blend-mode: overlay;
+      pointer-events: none;
+    }
+    #auth-overlay::after {
+      content: "";
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(124, 58, 237, 0.4), transparent 70%);
+      filter: blur(60px);
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation: authPulse 6s ease-in-out infinite;
+      pointer-events: none;
+    }
+    @keyframes authPulse {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
+      50%      { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
+    }
+    #auth-overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .auth-card {
+      width: 100%;
+      max-width: 430px;
+      padding: 36px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 24px;
+      backdrop-filter: blur(32px) saturate(180%);
+      -webkit-backdrop-filter: blur(32px) saturate(180%);
+      box-shadow:
+        0 32px 80px rgba(0,0,0,0.5),
+        inset 0 1px 0 rgba(255,255,255,0.1);
+      position: relative;
+      z-index: 1;
+      animation: authCardIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+    @keyframes authCardIn {
+      from { opacity: 0; transform: translateY(20px) scale(0.95); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .auth-logo {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 30px;
+    }
+    .auth-logo-icon {
+      font-size: 1.6rem;
+      width: 52px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #7C3AED 0%, #6C5CE7 40%, #EC4899 100%);
+      background-size: 200% 200%;
+      border-radius: 14px;
+      box-shadow: 0 8px 24px rgba(124, 58, 237, 0.5), inset 0 1px 0 rgba(255,255,255,0.25);
+      animation: gradientShift 6s ease infinite;
+    }
+    @keyframes gradientShift {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .auth-logo-text {
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.5px;
+      line-height: 1.1;
+    }
+    .auth-logo-sub {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.55);
+      margin-top: 4px;
+    }
+    .auth-tabs {
+      display: flex;
+      gap: 4px;
+      background: rgba(0,0,0,0.25);
+      padding: 4px;
+      border-radius: 14px;
+      margin-bottom: 28px;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .auth-tab {
+      flex: 1;
+      padding: 10px;
+      background: transparent;
+      border: none;
+      border-radius: 10px;
+      color: rgba(255,255,255,0.55);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      font-family: inherit;
+    }
+    .auth-tab:hover { color: rgba(255,255,255,0.8); }
+    .auth-tab.active {
+      background: linear-gradient(135deg, #7C3AED 0%, #6C5CE7 100%);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(108,92,231,0.45), inset 0 1px 0 rgba(255,255,255,0.2);
+    }
+    .auth-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .auth-form.hidden { display: none; }
+    .auth-field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .auth-field label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.65);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .auth-field input {
+      padding: 13px 16px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      color: #fff;
+      font-size: 0.95rem;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    .auth-field input:focus {
+      border-color: rgba(124, 58, 237, 0.8);
+      background: rgba(124, 58, 237, 0.08);
+      box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.18);
+    }
+    .auth-field input::placeholder {
+      color: rgba(255,255,255,0.3);
+    }
+    .auth-submit-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #7C3AED 0%, #6C5CE7 40%, #EC4899 100%);
+      background-size: 200% 200%;
+      border: none;
+      border-radius: 14px;
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: inherit;
+      margin-top: 8px;
+      box-shadow: 0 8px 24px rgba(108,92,231,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+      letter-spacing: 0.01em;
+      position: relative;
+      overflow: hidden;
+    }
+    .auth-submit-btn::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.3), transparent 70%);
+      transform: translateX(-100%);
+      transition: transform 0.6s ease;
+    }
+    .auth-submit-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(108,92,231,0.55), inset 0 1px 0 rgba(255,255,255,0.25);
+      background-position: 100% 100%;
+    }
+    .auth-submit-btn:hover:not(:disabled)::before {
+      transform: translateX(100%);
+    }
+    .auth-submit-btn:active:not(:disabled) {
+      transform: translateY(0) scale(0.98);
+    }
+    .auth-submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .auth-error {
+      font-size: 0.82rem;
+      color: #ff8a93;
+      padding: 10px 14px;
+      background: rgba(255,71,87,0.12);
+      border: 1px solid rgba(255,71,87,0.25);
+      border-radius: 10px;
+      display: none;
+    }
+    .auth-error:not(:empty) { display: block; }
+    .auth-success {
+      font-size: 0.82rem;
+      color: #5eead4;
+      padding: 10px 14px;
+      background: rgba(0,184,148,0.12);
+      border: 1px solid rgba(0,184,148,0.25);
+      border-radius: 10px;
+      display: none;
+      line-height: 1.5;
+    }
+    .auth-success:not(:empty) { display: block; }
+    .auth-link {
+      background: none;
+      border: none;
+      color: rgba(167, 139, 250, 1);
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 500;
+      padding: 0;
+      text-decoration: none;
+      font-family: inherit;
+      transition: color 0.2s ease;
+    }
+    .auth-link:hover { color: #c4b5fd; text-decoration: underline; }
+    .auth-footer {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: -8px;
+    }
+
+    /* ─── App Loader ────────────────────────────────────── */
+    #app-loader {
+      position: fixed;
+      inset: 0;
+      z-index: 9998;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(124, 58, 237, 0.35) 0%, transparent 50%),
+        radial-gradient(circle at 70% 70%, rgba(236, 72, 153, 0.25) 0%, transparent 50%),
+        linear-gradient(135deg, #0A0A1F, #0F0F28);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+    }
+    #app-loader.hidden { display: none; }
+    .loader-spinner {
+      width: 56px;
+      height: 56px;
+      border: 3px solid rgba(124,58,237,0.15);
+      border-top-color: #A78BFA;
+      border-right-color: #EC4899;
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+      filter: drop-shadow(0 0 12px rgba(124, 58, 237, 0.5));
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loader-text {
+      color: rgba(255,255,255,0.65);
+      font-size: 0.92rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+    .loader-logo {
+      font-size: 3rem;
+      margin-bottom: 4px;
+      filter: drop-shadow(0 8px 24px rgba(124,58,237,0.5));
+      animation: loaderFloat 3s ease-in-out infinite;
+    }
+    @keyframes loaderFloat {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-8px); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     APP LOADER
+     ═══════════════════════════════════════════════════════ -->
+<div id="app-loader">
+  <div class="loader-logo">📝</div>
+  <div class="loader-spinner"></div>
+  <div class="loader-text">Đang kết nối Lesson Note...</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     AUTH OVERLAY
+     ═══════════════════════════════════════════════════════ -->
+<div id="auth-overlay">
+  <div class="auth-card">
+    <!-- Logo -->
+    <div class="auth-logo">
+      <div class="auth-logo-icon">📝</div>
+      <div>
+        <div class="auth-logo-text">Lesson Note</div>
+        <div class="auth-logo-sub">Ghi chú thông minh cho học sinh, sinh viên</div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="login">Đăng nhập</button>
+      <button class="auth-tab" data-tab="register">Đăng ký</button>
+    </div>
+
+    <!-- Login Form -->
+    <div id="auth-login-form" class="auth-form">
+      <div class="auth-field">
+        <label for="auth-email">Email</label>
+        <input type="email" id="auth-email" placeholder="email@example.com" autocomplete="email">
+      </div>
+      <div class="auth-field">
+        <label for="auth-password">Mật khẩu</label>
+        <input type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <div class="auth-footer">
+        <button class="auth-link" id="auth-forgot-link">Quên mật khẩu?</button>
+      </div>
+      <div id="auth-login-error" class="auth-error"></div>
+      <button id="auth-login-btn" class="auth-submit-btn">Đăng nhập</button>
+    </div>
+
+    <!-- Register Form -->
+    <div id="auth-register-form" class="auth-form hidden">
+      <div class="auth-field">
+        <label for="auth-reg-email">Email</label>
+        <input type="email" id="auth-reg-email" placeholder="email@example.com" autocomplete="email">
+      </div>
+      <div class="auth-field">
+        <label for="auth-reg-password">Mật khẩu</label>
+        <input type="password" id="auth-reg-password" placeholder="Ít nhất 6 ký tự" autocomplete="new-password">
+      </div>
+      <div class="auth-field">
+        <label for="auth-reg-confirm">Xác nhận mật khẩu</label>
+        <input type="password" id="auth-reg-confirm" placeholder="Nhập lại mật khẩu" autocomplete="new-password">
+      </div>
+      <div id="auth-register-error" class="auth-error"></div>
+      <div id="auth-register-success" class="auth-success"></div>
+      <button id="auth-register-btn" class="auth-submit-btn">Đăng ký</button>
+    </div>
+
+    <!-- Reset Password Form -->
+    <div id="auth-reset-form" class="auth-form hidden">
+      <div class="auth-field">
+        <label for="auth-reset-email">Email đăng ký</label>
+        <input type="email" id="auth-reset-email" placeholder="email@example.com">
+      </div>
+      <div id="auth-reset-error" class="auth-error"></div>
+      <div id="auth-reset-success" class="auth-success"></div>
+      <button id="auth-reset-btn" class="auth-submit-btn">Gửi email đặt lại</button>
+      <div style="text-align:center; margin-top: -4px;">
+        <button class="auth-link" id="auth-back-to-login">← Quay lại đăng nhập</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     MAIN APP (hidden until logged in)
+     ═══════════════════════════════════════════════════════ -->
+<div id="app" class="dark-theme hidden">
+
+  <!-- ═══════════════════════════════════════════════
+       SIDEBAR
+       ═══════════════════════════════════════════════ -->
+  <aside id="sidebar">
+
+    <!-- Sidebar Header / Logo -->
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <span class="logo-icon">📝</span>
+        <span class="logo-text">Lesson Note</span>
+      </div>
+      <button id="btn-theme-toggle" class="btn-icon" title="Chuyển giao diện">
+        <span id="theme-icon">☀️</span>
+      </button>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar-nav">
+      <button id="btn-all-notes" class="btn-nav active">
+        <span class="nav-icon">📄</span>
+        <span class="nav-text">Tất cả ghi chú</span>
+        <span class="nav-count" id="all-notes-count">0</span>
+      </button>
+      <button id="btn-bookmarks" class="btn-nav">
+        <span class="nav-icon">⭐</span>
+        <span class="nav-text">Đánh dấu</span>
+        <span class="nav-count" id="bookmarks-count">0</span>
+      </button>
+      <button id="btn-trash" class="btn-nav">
+        <span class="nav-icon">🗑️</span>
+        <span class="nav-text">Thùng rác</span>
+        <span class="nav-count" id="trash-count">0</span>
+      </button>
+    </nav>
+
+    <!-- Sidebar Subjects -->
+    <div class="sidebar-subjects">
+      <div class="sidebar-subjects-header">
+        <h6 class="sidebar-section-title">Môn học</h6>
+        <button id="btn-add-subject" class="btn-icon-sm" title="Thêm môn học">➕</button>
+      </div>
+      <ul id="subject-list"></ul>
+    </div>
+
+    <!-- Sidebar Footer -->
+    <div class="sidebar-footer">
+      <!-- User info bar -->
+      <div class="user-info-bar">
+        <span class="user-info-icon">👤</span>
+        <span id="user-email-display">Loading...</span>
+        <button id="btn-sign-out" title="Đăng xuất">Logout</button>
+      </div>
+
+      <button id="btn-template" class="btn-nav">
+        <span class="nav-icon">📋</span>
+        <span class="nav-text">Mẫu ghi chú</span>
+      </button>
+      <button id="btn-focus-mode" class="btn-nav">
+        <span class="nav-icon">🎯</span>
+        <span class="nav-text">Tập trung</span>
+      </button>
+      <button id="btn-export" class="btn-nav">
+        <span class="nav-icon">📤</span>
+        <span class="nav-text">Xuất file</span>
+      </button>
+      <button id="btn-backup" class="btn-nav">
+        <span class="nav-icon">💾</span>
+        <span class="nav-text">Sao lưu & Khôi phục</span>
+      </button>
+      <button id="btn-shortcuts-help" class="btn-nav">
+        <span class="nav-icon">⌨️</span>
+        <span class="nav-text">Phím tắt</span>
+      </button>
+      <div class="sidebar-footer-meta">
+        <span id="theme-text">Light Mode</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══════════════════════════════════════════════
+       NOTE LIST PANEL
+       ═══════════════════════════════════════════════ -->
+  <section id="note-list-panel">
+
+    <!-- Note List Header -->
+    <div class="notelist-header">
+      <h2 id="note-list-title">Tất cả ghi chú</h2>
+      <div class="notelist-actions">
+        <select id="note-sort" title="Sắp xếp">
+          <option value="updatedAt">Cập nhật mới nhất</option>
+          <option value="createdAt">Tạo mới nhất</option>
+          <option value="title">Theo tên A-Z</option>
+        </select>
+        <button id="btn-new-note" class="btn-primary" title="Tạo ghi chú mới">
+          <span>＋</span> Ghi chú mới
+        </button>
+      </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="notelist-search">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="search-input" placeholder="Tìm kiếm ghi chú..." autocomplete="off">
+      <button id="btn-clear-search" class="btn-icon-sm hidden" title="Xóa tìm kiếm">✕</button>
+    </div>
+
+    <!-- Note List -->
+    <ul id="note-list"></ul>
+
+    <!-- Empty State -->
+    <div id="note-list-empty" class="empty-state">
+      <div class="empty-icon">📝</div>
+      <h3 class="empty-title">Chưa có ghi chú nào</h3>
+      <p class="empty-desc">Nhấn nút bên trên để tạo ghi chú đầu tiên</p>
+      <button id="btn-create-first-note" class="btn-primary">
+        <span>＋</span> Tạo ghi chú đầu tiên
+      </button>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════
+       EDITOR PANEL
+       ═══════════════════════════════════════════════ -->
+  <main id="editor-panel">
+
+    <!-- Editor Toolbar -->
+    <div id="editor-toolbar" class="hidden">
+      <!-- Text formatting -->
+      <div class="toolbar-group">
+        <select id="heading-select" class="toolbar-select" title="Kiểu tiêu đề">
+          <option value="">Định dạng</option>
+          <option value="h1">Tiêu đề 1</option>
+          <option value="h2">Tiêu đề 2</option>
+          <option value="h3">Tiêu đề 3</option>
+          <option value="p">Đoạn văn</option>
+        </select>
+      </div>
+
+      <div class="toolbar-divider"></div>
+
+      <!-- Inline formatting -->
+      <div class="toolbar-group">
+        <button class="toolbar-btn" data-command="bold" title="In đậm (Ctrl+B)">𝐁</button>
+        <button class="toolbar-btn" data-command="italic" title="In nghiêng (Ctrl+I)">𝐼</button>
+        <button class="toolbar-btn" data-command="underline" title="Gạch chân (Ctrl+U)">U̲</button>
+        <button class="toolbar-btn" data-command="strikeThrough" title="Gạch ngang">S̶</button>
+        <button class="toolbar-btn" data-command="highlight" title="Highlight">🖍️</button>
+      </div>
+
+      <div class="toolbar-divider"></div>
+
+      <!-- Lists & alignment -->
+      <div class="toolbar-group">
+        <button class="toolbar-btn" data-command="insertUnorderedList" title="Danh sách">•≡</button>
+        <button class="toolbar-btn" data-command="insertOrderedList" title="Danh sách số">1≡</button>
+        <button class="toolbar-btn" data-command="insertChecklist" title="Checklist">☑️</button>
+      </div>
+
+      <div class="toolbar-divider"></div>
+
+      <!-- Alignment -->
+      <div class="toolbar-group">
+        <button class="toolbar-btn" data-command="justifyLeft" title="Căn trái">≡←</button>
+        <button class="toolbar-btn" data-command="justifyCenter" title="Căn giữa">≡↔</button>
+        <button class="toolbar-btn" data-command="justifyRight" title="Căn phải">≡→</button>
+      </div>
+
+      <div class="toolbar-divider"></div>
+
+      <!-- Insert -->
+      <div class="toolbar-group">
+        <button class="toolbar-btn" data-command="createLink" title="Chèn link (Ctrl+K)">🔗</button>
+        <button class="toolbar-btn" data-command="insertImage" title="Chèn ảnh">🖼️</button>
+        <button class="toolbar-btn" data-command="code" title="Code block">⟨/⟩</button>
+      </div>
+
+      <div class="toolbar-divider"></div>
+
+      <!-- Indent & misc -->
+      <div class="toolbar-group">
+        <button class="toolbar-btn" data-command="indent" title="Thụt lề">→|</button>
+        <button class="toolbar-btn" data-command="outdent" title="Bỏ thụt lề">|←</button>
+        <button class="toolbar-btn" data-command="removeFormat" title="Xóa định dạng">⊘</button>
+      </div>
+
+      <div class="toolbar-divider"></div>
+
+      <!-- Undo / Redo -->
+      <div class="toolbar-group">
+        <button class="toolbar-btn" data-command="undo" title="Hoàn tác (Ctrl+Z)">↩️</button>
+        <button class="toolbar-btn" data-command="redo" title="Làm lại (Ctrl+Y)">↪️</button>
+      </div>
+    </div>
+
+    <!-- Note Title -->
+    <input type="text" id="note-title-input" class="hidden" placeholder="Tiêu đề ghi chú..." autocomplete="off">
+
+    <!-- Tags -->
+    <div id="note-tags" class="hidden">
+      <input type="text" id="tag-input" placeholder="Thêm tag + Enter">
+    </div>
+
+    <!-- Editor Content -->
+    <div id="editor-content" class="hidden" contenteditable="true" spellcheck="true"></div>
+
+    <!-- Editor Status Bar -->
+    <div class="editor-status hidden">
+      <span id="word-count">0 từ</span>
+      <span class="status-divider">•</span>
+      <span id="char-count">0 ký tự</span>
+      <span class="status-divider">•</span>
+      <span id="reading-time">~1 phút đọc</span>
+      <span class="status-spacer"></span>
+      <span id="save-status">✓ Đã lưu</span>
+    </div>
+
+    <!-- Editor Empty State -->
+    <div id="editor-empty" class="editor-empty-state">
+      <div class="empty-illustration">
+        <div class="empty-icon-lg">✨</div>
+        <div class="empty-decoration">
+          <span>📚</span><span>📝</span><span>🎯</span>
+        </div>
+      </div>
+      <h2 class="empty-title">Chọn ghi chú để bắt đầu</h2>
+      <p class="empty-desc">Chọn ghi chú từ danh sách bên trái hoặc tạo ghi chú mới</p>
+      <div class="empty-shortcuts">
+        <div class="shortcut-hint">
+          <kbd>Ctrl</kbd> + <kbd>N</kbd>
+          <span>Tạo ghi chú mới</span>
+        </div>
+        <div class="shortcut-hint">
+          <kbd>Ctrl</kbd> + <kbd>F</kbd>
+          <span>Tìm kiếm</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ═══════════════════════════════════════════════
+       MODALS
+       ═══════════════════════════════════════════════ -->
+
+  <!-- Modal Overlay (backdrop) -->
+  <div id="modal-overlay">
+
+    <!-- Subject Modal -->
+    <div id="modal-subject" class="modal">
+      <div class="modal-header">
+        <h3 id="modal-subject-title">Thêm môn học</h3>
+        <button class="btn-icon-sm" data-close-modal>✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="subject-name-input">Tên môn học</label>
+          <input type="text" id="subject-name-input" placeholder="Ví dụ: Toán học" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label>Biểu tượng</label>
+          <div id="icon-picker" class="picker-grid"></div>
+        </div>
+        <div class="form-group">
+          <label>Màu sắc</label>
+          <div id="color-picker" class="picker-grid"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" data-close-modal>Hủy</button>
+        <button id="btn-save-subject" class="btn-primary">Lưu</button>
+      </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="modal-confirm" class="modal modal-sm">
+      <div class="modal-header">
+        <h3>Xác nhận</h3>
+        <button class="btn-icon-sm" data-close-modal>✕</button>
+      </div>
+      <div class="modal-body">
+        <p id="confirm-message">Bạn có chắc chắn không?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" data-close-modal>Hủy</button>
+        <button id="btn-confirm-action" class="btn-primary btn-danger">Xác nhận</button>
+      </div>
+    </div>
+
+    <!-- Template Modal -->
+    <div id="modal-template" class="modal">
+      <div class="modal-header">
+        <h3>Chọn mẫu ghi chú</h3>
+        <button class="btn-icon-sm" data-close-modal>✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="template-grid">
+          <div class="template-card" data-template="cornell">
+            <div class="template-icon">📋</div>
+            <div class="template-name">Cornell Notes</div>
+            <div class="template-desc">Phương pháp ghi chú Cornell hiệu quả</div>
+          </div>
+          <div class="template-card" data-template="outline">
+            <div class="template-icon">📑</div>
+            <div class="template-name">Dàn ý</div>
+            <div class="template-desc">Dàn ý bài học có cấu trúc</div>
+          </div>
+          <div class="template-card" data-template="qa">
+            <div class="template-icon">❓</div>
+            <div class="template-name">Hỏi & Đáp</div>
+            <div class="template-desc">Định dạng câu hỏi và trả lời</div>
+          </div>
+          <div class="template-card" data-template="blank">
+            <div class="template-icon">📄</div>
+            <div class="template-name">Trang trắng</div>
+            <div class="template-desc">Bắt đầu từ trang trắng</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div id="modal-export" class="modal modal-sm">
+      <div class="modal-header">
+        <h3>Xuất ghi chú</h3>
+        <button class="btn-icon-sm" data-close-modal>✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="export-options">
+          <button id="btn-export-pdf" class="export-option">
+            <span class="export-icon">📄</span>
+            <span class="export-label">Xuất PDF</span>
+            <span class="export-desc">In hoặc lưu dưới dạng PDF</span>
+          </button>
+          <button id="btn-export-md" class="export-option">
+            <span class="export-icon">📝</span>
+            <span class="export-label">Xuất Markdown</span>
+            <span class="export-desc">Tải file .md</span>
+          </button>
+          <button id="btn-copy-html" class="export-option">
+            <span class="export-icon">📋</span>
+            <span class="export-label">Sao chép nội dung</span>
+            <span class="export-desc">Sao chép HTML vào clipboard</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Shortcuts Modal -->
+    <div id="modal-shortcuts" class="modal">
+      <div class="modal-header">
+        <h3>Phím tắt</h3>
+        <button class="btn-icon-sm" data-close-modal>✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="shortcuts-list"></div>
+      </div>
+    </div>
+
+    <!-- Backup Modal -->
+    <div id="modal-backup" class="modal">
+      <div class="modal-header">
+        <h3>Sao lưu & Khôi phục</h3>
+        <button class="btn-icon-sm" data-close-modal>✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="backup-stats">
+          <div class="backup-stat-item">
+            <span class="backup-stat-num" id="backup-stat-subjects">0</span>
+            <span class="backup-stat-label">Môn học</span>
+          </div>
+          <div class="backup-stat-item">
+            <span class="backup-stat-num" id="backup-stat-notes">0</span>
+            <span class="backup-stat-label">Ghi chú</span>
+          </div>
+          <div class="backup-stat-item">
+            <span class="backup-stat-num" id="backup-stat-tags">0</span>
+            <span class="backup-stat-label">Thẻ tag</span>
+          </div>
+        </div>
+
+        <div class="export-options">
+          <button id="btn-backup-export" class="export-option">
+            <span class="export-icon">📤</span>
+            <div class="export-meta">
+              <span class="export-label">Tạo bản sao lưu (JSON)</span>
+              <span class="export-desc">Tải về toàn bộ ghi chú, môn học và cài đặt hiện tại</span>
+            </div>
+          </button>
+          
+          <button id="btn-backup-import-trigger" class="export-option">
+            <span class="export-icon">📥</span>
+            <div class="export-meta">
+              <span class="export-label">Khôi phục từ bản sao lưu</span>
+              <span class="export-desc">Chọn file JSON đã tải để nhập lại dữ liệu</span>
+            </div>
+          </button>
+          <input type="file" id="input-backup-file" accept=".json" style="display: none;">
+        </div>
+        
+        <div class="backup-warning">
+          <span class="warning-icon">⚠️</span>
+          <p class="warning-text"><strong>Lưu ý:</strong> Hành động khôi phục sẽ thay thế hoàn toàn dữ liệu hiện tại của bạn trên Supabase. Hãy chắc chắn tải bản sao lưu trước khi thực hiện khôi phục.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+</div>
+
+<!-- Scripts - Load order matters! -->
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/db.js"></script>
+<script src="js/theme.js"></script>
+<script src="js/subjects.js"></script>
+<script src="js/notes.js"></script>
+<script src="js/editor.js"></script>
+<script src="js/search.js"></script>
+<script src="js/shortcuts.js"></script>
+<script src="js/export.js"></script>
+<script src="js/templates.js"></script>
+<script src="js/backup.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
