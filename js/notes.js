@@ -136,8 +136,7 @@ window.NoteManager = {
         title: '',
         content: '',
         plainText: '',
-        tags: [],
-        template: null
+        tags: []
       });
 
       // Reload notes

@@ -189,7 +189,7 @@ window.DB = {
   // NOTES CRUD
   // ============================================================
 
-  async addNote({ subjectId, title, content, plainText, tags, template }) {
+  async addNote({ subjectId, title, content, plainText, tags }) {
     const rows = await this._fetch('notes', {
       method: 'POST',
       body: JSON.stringify({
@@ -198,7 +198,6 @@ window.DB = {
         content: content || '',
         plain_text: plainText || '',
         tags: tags || [],
-        template: template || null,
         is_pinned: false,
         is_bookmarked: false,
         is_deleted: false,
